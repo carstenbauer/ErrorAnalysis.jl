@@ -18,6 +18,7 @@ Statistical error for correlated data from binning analysis.
 function error_binning(X::Vector{T}; binsize=0) where T<:Real
     return sqrt(var(X)*(1+2*tau_binning(X, binsize=binsize)))
 end
+export error_binning
 
 """
 Statistical error for correlated data from integrated autocorrelation.
@@ -25,6 +26,7 @@ Statistical error for correlated data from integrated autocorrelation.
 function error_integrated(X::Vector{T}) where T<:Real
     return sqrt(var(X)*(2*tau_integrated(X)))
 end
+export error_integrated
 
 """
 Statistical error for correlated data from fitting `C(t) ~ exp(-t/tau)`.
@@ -32,6 +34,7 @@ Statistical error for correlated data from fitting `C(t) ~ exp(-t/tau)`.
 function error_fitting(X::Vector{T}; binsize=0) where T<:Real
     return sqrt(var(X)*(1+2*tau_fitting(X)))
 end
+export error_fitting
 
 
 #####
@@ -89,7 +92,7 @@ function tau_binning(X::Vector{T}; binsize=0) where T<:Real
         Rplateau != R[end] || warn("Couldn't find plateau. Maybe not converged?")
     else
         #static binning with fixed, single binsize
-        Rplateau = binning(X, binsize=binsize)
+        Rplateau = binning(X, binsize)
     end
 
     return 1/2*(Rplateau-1)
@@ -147,14 +150,14 @@ function binning(X::Vector{T}, binsize::Int) where T<:Real
     lastbs == 0 || (lastbs >= binsize/2 || warn("Binsize leads to last bin having less than binsize/2 elements."))
 
 
-    blockmeans = vec(mean(reshape(X[1:n_bins*binsize], (bs,n_bins)), 1))
+    blockmeans = vec(mean(reshape(X[1:n_bins*binsize], (binsize,n_bins)), 1))
     if lastbs != 0 
-        vcat(blockmeans, mean(X[nbins*binsize+1:end]))
+        vcat(blockmeans, mean(X[n_bins*binsize+1:end]))
         n_bins += 1
     end
 
-    blocksigma2 = 1/(n_bins-1)*sum((blockmeans - Xmean).^2)
-    return bs * blocksigma2 / Xvar
+    blocksigma2 = 1/(n_bins-1)*sum((blockmeans - mean(X)).^2)
+    return binsize * blocksigma2 / var(X)
 end
 export binning
 
@@ -174,6 +177,35 @@ function binning_plot(X::Vector{T}; min_nbins=500) where T<:Real
     return bss, R
 end
 export binning_plot
+
+
+function error_plot(X::Vector{T}; binsize=0, histbins=50) where T<:Real
+    fig, ax = subplots(1, 2, figsize=(10,4))
+
+    Xmean = mean(X)
+
+    err = error_binning(X, binsize=binsize)
+
+    ax[1][:hist](X, histbins, color="gray", alpha=.5, normed=1)
+    ax[1][:set_ylabel]("\$ P \$")
+    ax[1][:set_xlabel]("X")
+    ax[1][:set_yticks]([])
+    ax[1][:axvline](Xmean, color="black", label="\$ $(round(Xmean, 3)) \$", linewidth=2.0)
+    
+    ax[1][:axvline](Xmean+err, color="r", label="\$ \\pm $(round(err, 3)) \$", linewidth=2.0)
+    ax[1][:axvline](Xmean-err, color="r", linewidth=2.0)
+    
+    ax[1][:legend](frameon=false, loc="best")
+    
+    ax[2][:plot](autocor(X), "-", color="k", linewidth=2.0)
+    ax[2][:set_xlabel]("\$ t \$")
+    ax[2][:set_ylabel]("\$ C(t) \$")
+
+    tight_layout()
+    return ax
+end
+export error_plot
+
 
 
 
