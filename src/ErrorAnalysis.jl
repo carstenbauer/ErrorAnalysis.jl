@@ -57,7 +57,7 @@ function tau_fitting(X::Vector{T}) where T<:Real
     Cx = autocor(X)
 
     firstneg = findfirst(x->x<=0, Cx)
-    logCx = firstneg != 0 ? log(Cx[1:firstneg-1]) : log(Cx)
+    logCx = firstneg != 0 ? log.(Cx[1:firstneg-1]) : log.(Cx)
     length(logCx) <= 2 ? warn("Fitting log autocorrelation with less than 3 datapoints.") : nothing
 
     # Fitting
@@ -178,17 +178,27 @@ function binning_plot(X::Vector{T}; min_nbins=500) where T<:Real
 end
 export binning_plot
 
+"""
+Plot histogram of X with mean and statistical errorbars (including correlation effects) and autocorrelation function C(t).
 
-function error_plot(X::Vector{T}; binsize=0, histbins=50) where T<:Real
+Optional keyword `error` can be "binning", "integrated", or "fitting".
+"""
+function error_plot(X::Vector{T}; binsize=0, histbins=50, error="binning") where T<:Real
     fig, ax = subplots(1, 2, figsize=(10,4))
 
     Xmean = mean(X)
 
-    err = error_binning(X, binsize=binsize)
+    if error == "binning"
+        err = error_binning(X, binsize=binsize)
+    elseif error == "integrated"
+        err = error_integrated(X)
+    elseif error == "fitting"
+        err = error_fitting(X)
+    end
 
     ax[1][:hist](X, histbins, color="gray", alpha=.5, normed=1)
     ax[1][:set_ylabel]("\$ P \$")
-    ax[1][:set_xlabel]("X")
+    ax[1][:set_xlabel]("\$ X \$")
     ax[1][:set_yticks]([])
     ax[1][:axvline](Xmean, color="black", label="\$ $(round(Xmean, 3)) \$", linewidth=2.0)
     
