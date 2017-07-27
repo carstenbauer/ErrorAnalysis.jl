@@ -15,25 +15,38 @@ using PyPlot
 """
 Statistical error for correlated data from binning analysis.
 """
-function error_binning(X::Vector{T}; binsize=0) where T<:Real
-    return sqrt(var(X)*(1+2*tau_binning(X, binsize=binsize)))
-end
+error_binning(X::Vector{T}; binsize=0) where T<:Real = sqrt(var(X)*(1+2*tau_binning(X, binsize=binsize)))
+error_binning(X::Vector{T}; binsize=0) where T<:Complex = sqrt(error_binning(real(X), binsize=binsize)^2 + error_binning(imag(X), binsize=binsize)^2)
+error_binning(X::Array{T}; binsize=0) where T<:Number = squeeze(mapslices(ts->error_binning(ts, binsize=binsize), X, ndims(X)), ndims(X))
 export error_binning
+
+# function error_binning(X::Array{T}; binsize=0) where T<:Real
+#     N = size(X, ndims(X)) # length of time series
+#     linX = reshape(X, (:, N))
+#     Nel = size(linX, 1) # number of elements/time series
+#     el_shape = size(X)[1:end-1]
+    
+#     errs = zeros(T, Nel)
+#     for i in 1:size(errs, 1)
+#         errs[i] = error_binning(linX[i,:], binsize=binsize)
+#     end
+#     return reshape(errs, el_shape)
+# end
 
 """
 Statistical error for correlated data from integrated autocorrelation.
 """
-function error_integrated(X::Vector{T}) where T<:Real
-    return sqrt(var(X)*(2*tau_integrated(X)))
-end
+error_integrated(X::Vector{T}) where T<:Real = sqrt(var(X)*(2*tau_integrated(X)))
+error_integrated(X::Vector{T}) where T<:Complex = sqrt(error_integrated(real(X))^2 + error_integrated(imag(X))^2)
+error_integrated(X::Array{T}) where T<:Number = squeeze(mapslices(ts->error_integrated(ts), X, ndims(X)), ndims(X))
 export error_integrated
 
 """
 Statistical error for correlated data from fitting `C(t) ~ exp(-t/tau)`.
 """
-function error_fitting(X::Vector{T}; binsize=0) where T<:Real
-    return sqrt(var(X)*(1+2*tau_fitting(X)))
-end
+error_fitting(X::Vector{T}) where T<:Real = sqrt(var(X)*(1+2*tau_fitting(X)))
+error_fitting(X::Vector{T}) where T<:Complex = sqrt(error_fitting(real(X))^2 + error_fitting(imag(X))^2)
+error_fitting(X::Array{T}) where T<:Number = squeeze(mapslices(ts->error_fitting(ts), X, ndims(X)), ndims(X))
 export error_fitting
 
 
