@@ -245,6 +245,7 @@ end
 export error_plot
 
 
+include("Jackknife.jl")
 
 
 end # module
