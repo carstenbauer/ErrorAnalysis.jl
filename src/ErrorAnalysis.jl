@@ -16,9 +16,12 @@ using PyPlot
 Statistical error for correlated data from binning analysis.
 """
 error_binning(X::Vector{T}; binsize=0) where T<:Real = sqrt(var(X)*(1+2*tau_binning(X, binsize=binsize)))
-error_binning(X::Vector{T}; binsize=0) where T<:Complex = sqrt(error_binning(real(X), binsize=binsize)^2 + error_binning(imag(X), binsize=binsize)^2)
+error_binning(X::Vector{T}; binsize=0) where T<:Complex = abs(error_binning(real(X), binsize=binsize) + error_binning(imag(X), binsize=binsize))
 error_binning(X::Array{T}; binsize=0) where T<:Number = squeeze(mapslices(ts->error_binning(ts, binsize=binsize), X, ndims(X)), ndims(X))
 export error_binning
+
+Neff_binning(X::Vector{T}; binsize=0) where T<:Real = floor(Int, length(X)/(1+2*tau_binning(X, binsize=binsize)))
+export Neff_binning
 
 # function error_binning(X::Array{T}; binsize=0) where T<:Real
 #     N = size(X, ndims(X)) # length of time series
@@ -37,17 +40,23 @@ export error_binning
 Statistical error for correlated data from integrated autocorrelation.
 """
 error_integrated(X::Vector{T}) where T<:Real = sqrt(var(X)*(2*tau_integrated(X)))
-error_integrated(X::Vector{T}) where T<:Complex = sqrt(error_integrated(real(X))^2 + error_integrated(imag(X))^2)
+error_integrated(X::Vector{T}) where T<:Complex = abs(error_integrated(real(X)) + error_integrated(imag(X)))
 error_integrated(X::Array{T}) where T<:Number = squeeze(mapslices(ts->error_integrated(ts), X, ndims(X)), ndims(X))
 export error_integrated
+
+Neff_integrated(X::Vector{T}) where T<:Real = floor(Int, length(X)/(2*tau_integrated(X)))
+export Neff_integrated
 
 """
 Statistical error for correlated data from fitting `C(t) ~ exp(-t/tau)`.
 """
 error_fitting(X::Vector{T}) where T<:Real = sqrt(var(X)*(1+2*tau_fitting(X)))
-error_fitting(X::Vector{T}) where T<:Complex = sqrt(error_fitting(real(X))^2 + error_fitting(imag(X))^2)
+error_fitting(X::Vector{T}) where T<:Complex = abs(error_fitting(real(X)) + error_fitting(imag(X)))
 error_fitting(X::Array{T}) where T<:Number = squeeze(mapslices(ts->error_fitting(ts), X, ndims(X)), ndims(X))
 export error_fitting
+
+Neff_fitting(X::Vector{T}) where T<:Real = floor(Int, length(X)/(1+2*tau_fitting(X)))
+export Neff_fitting
 
 
 #####
@@ -94,6 +103,7 @@ function tau_binning(X::Vector{T}; binsize=0) where T<:Real
     if binsize == 0
         #dynamic binning with varying binsize
         bss, R = binning(X)
+        length(R) > 0 || error("Binning failed. Maybe min_nbins to large?")
         Rplateau = R[end]
         for i in 1:length(bss)-2
             width = abs(maximum(R[i:i+2]) - minimum(R[i:i+2]))
@@ -181,8 +191,9 @@ Ideally, this plot shows a plateau.
 
 Returns bss and R from binning(X).
 """
-function binning_plot(X::Vector{T}; min_nbins=500) where T<:Real
+function binning_plot(X::Vector{T}; min_nbins=500, figsize=(6,4)) where T<:Real
     bss, R = binning(X, min_nbins=min_nbins)
+    figure(figsize=figsize)
     plot(bss, R, "m.-")
     xlabel("bin size")
     ylabel("R");
@@ -196,10 +207,11 @@ Plot histogram of X with mean and statistical errorbars (including correlation e
 
 Optional keyword `error` can be "binning", "integrated", or "fitting".
 """
-function error_plot(X::Vector{T}; binsize=0, histbins=50, error="binning") where T<:Real
-    fig, ax = subplots(1, 2, figsize=(10,4))
+function error_plot(X::Vector{T}; binsize=0, histbins=50, error="binning", figsize=(10,4), digits=3) where T<:Real
+    fig, ax = subplots(1, 2, figsize=figsize)
 
     Xmean = mean(X)
+    Xstd = std(X)
 
     if error == "binning"
         err = error_binning(X, binsize=binsize)
@@ -213,10 +225,13 @@ function error_plot(X::Vector{T}; binsize=0, histbins=50, error="binning") where
     ax[1][:set_ylabel]("\$ P \$")
     ax[1][:set_xlabel]("\$ X \$")
     ax[1][:set_yticks]([])
-    ax[1][:axvline](Xmean, color="black", label="\$ $(round(Xmean, 3)) \$", linewidth=2.0)
+    ax[1][:axvline](Xmean, color="black", label="\$ $(round(Xmean, digits)) \$", linewidth=2.0)
     
-    ax[1][:axvline](Xmean+err, color="r", label="\$ \\pm $(round(err, 3)) \$", linewidth=2.0)
+    ax[1][:axvline](Xmean+err, color="r", label="\$ \\pm $(round(err, digits)) \$", linewidth=2.0)
     ax[1][:axvline](Xmean-err, color="r", linewidth=2.0)
+
+    ax[1][:axvline](Xmean+Xstd, color="g", label="\$ \\pm $(round(Xstd, digits)) \$ (std)", linewidth=2.0)
+    ax[1][:axvline](Xmean-Xstd, color="g", linewidth=2.0)
     
     ax[1][:legend](frameon=false, loc="best")
     
