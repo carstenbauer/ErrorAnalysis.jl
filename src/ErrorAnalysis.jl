@@ -16,7 +16,10 @@ using PyPlot
 Statistical error for correlated data from binning analysis.
 """
 error_binning(X::Vector{T}; binsize=0) where T<:Real = sqrt(var(X)*(1+2*tau_binning(X, binsize=binsize)))
+
 error_binning(X::Vector{T}; binsize=0) where T<:Complex = abs(error_binning(real(X), binsize=binsize) + error_binning(imag(X), binsize=binsize))
+# error_binning(X::Vector{T}; binsize=0) where T<:Complex = error_binning(real(X), binsize=binsize) + im*error_binning(imag(X), binsize=binsize)
+
 error_binning(X::Array{T}; binsize=0) where T<:Number = squeeze(mapslices(ts->error_binning(ts, binsize=binsize), X, ndims(X)), ndims(X))
 export error_binning
 
