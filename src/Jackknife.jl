@@ -1,4 +1,28 @@
 """
+    jackknife_binning(g::Function, x; [binsize=10])
+Compute the bias-corrected jackknife estimate and jackknife variance of `g(<x>)` by binning
+x and performing leave-one-out analysis.
+"""
+function jackknife_error(g::Function, x::AbstractVector{T}; binsize::Int=10) where T<:Real
+    rem(length(x), binsize) == 0 || throw(ArgumentError("Bin size not compatible with sample size"))
+
+    xblock = map(mean, Base.Iterators.partition(x, binsize))
+    gis = Jackknife.leaveoneout(g, xblock)
+    return Jackknife.var(g, xblock; gis=gis)
+end
+
+function jackknife_error(g::Function, x::AbstractVector{T}; binsize::Int=10) where T<:Complex
+    sqrt(jackknife_error(g, real(x), binsize=binsize)^2 + jackknife_error(g, imag(x), binsize=binsize)^2)
+end
+
+function jackknife_error(g::Function, x::AbstractArray{T}; binsize::Int=10) where T<:Number
+    ndimsx = ndims(x)
+    mapslices(y->binning_error(y; binsize=binsize), x, ndimsx)[(Colon() for _ in 1:ndimsx-1)...,1]
+end
+
+
+
+"""
 **Jackknife** errors for functions of uncertain data, i.e. g(<x>)
 """
 module Jackknife
@@ -56,18 +80,3 @@ end
 end # module
 
 export Jackknife
-
-
-"""
-    jackknife_binning(g::Function, x; [binsize=10])
-Compute the bias-corrected jackknife estimate and jackknife variance of `g(<x>)` by binning
-x and performing leave-one-out analysis.
-"""
-function jackknife_binning(g::Function, x::AbstractVector{T}; binsize::Int=10) where T<:Real
-    rem(length(x), binsize) == 0 || throw(ArgumentError("Bin size not compatible with sample size"))
-
-    xblock = map(mean, Base.Iterators.partition(x, binsize))
-    gis = Jackknife.leaveoneout(g, xblock)
-    return Jackknife.estimate(g, xblock), Jackknife.var(g, xblock)
-end
-export jackknife_binning
