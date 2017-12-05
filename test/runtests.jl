@@ -3,10 +3,14 @@ using Base.Test
 
 # write your own tests here
 @testset "Generic" begin
+
     x = 3.1234;
     y = 3.021;
-    @test iswithinerrorbars(x,y,0.1,true) == false
+    A = [0.531844 0.717453; 0.552965 0.421109];
+    B = [0.273785 0.212329; 0.175248 0.598923];
+    @test !iswithinerrorbars(x,y,0.1,true)
     @test iswithinerrorbars(x,y,0.11,true) == true
-    A = rand(2,2);
-    B = rand(2,2);
+    @test !iswithinerrorbars(x,y,fill(0.01,size(x)...), true)
+    @test iswithinerrorbars(x,y,fill(0.6,size(x)...), true)
+
 end
