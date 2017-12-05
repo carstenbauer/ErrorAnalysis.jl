@@ -10,7 +10,7 @@ using Base.Test
     B = [0.273785 0.212329; 0.175248 0.598923];
     @test !iswithinerrorbars(x,y,0.1,true)
     @test iswithinerrorbars(x,y,0.11,true) == true
-    @test !iswithinerrorbars(x,y,fill(0.01,size(x)...), true)
-    @test iswithinerrorbars(x,y,fill(0.6,size(x)...), true)
+    @test !iswithinerrorbars(A,B,fill(0.01,size(x)...), true)
+    @test iswithinerrorbars(A,B,fill(0.6,size(x)...), true)
 
 end
