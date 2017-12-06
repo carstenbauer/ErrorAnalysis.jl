@@ -15,3 +15,5 @@ In Julia REPL:
 Pkg.clone("https://github.com/crstnbr/ErrorAnalysis.jl")
 using ErrorAnalysis
 ```
+
+Example of use, see [`/example/ErrorAnalysis.ipynb`](example/ErrorAnalysis.ipynb).
