@@ -3,8 +3,6 @@
 """
 module ErrorAnalysis
 
-using PyPlot
-
 include("binning.jl")
 include("Jackknife.jl")
 include("autocorrtimes.jl") # old
@@ -17,7 +15,7 @@ Will print `x ≈ y + k·δ` for `print=true`.
 
 Is equivalent to `isapprox(a,b,atol=δ,rtol=zero(b))`.
 """
-function iswithinerrorbars(a::T, b::T, δ::Real, print::Bool=false) where T<:Number
+function iswithinerrorbars(a::T, b::S, δ::Real, print::Bool=false) where T<:Number where S<:Number
   equal = isapprox(a,b,atol=δ,rtol=zero(T))
   if print && !equal
     out = a>b ? abs(a-(b+δ))/δ : -abs(a-(b-δ))/δ
@@ -32,7 +30,7 @@ end
 Elementwise check whether `A` and `B` are equal up to given real error matrix `Δ`.
 Will print `A ≈ B + K.*Δ` for `print=true`.
 """
-function iswithinerrorbars(A::AbstractArray{T}, B::AbstractArray{T}, Δ::AbstractArray{<:Real}, print::Bool=false) where T<:Number
+function iswithinerrorbars(A::AbstractArray{T}, B::AbstractArray{S}, Δ::AbstractArray{<:Real}, print::Bool=false) where T<:Number where S<:Number
   size(A) == size(B) == size(Δ) || error("A, B and Δ must have same size.")
 
   R = iswithinerrorbars.(A,B,Δ,false)

@@ -2,11 +2,16 @@
 # Binning error analysis
 #####
 
-```
-Calculates statistical error (eff. standard deviation, i.e. sqrt of varicance) through binning of the data
-and assuming statistical independence of bins (i.e. R plateau has been reached). (Eq. 3.18 basically)
-```
-function binning_error(X::AbstractVector{T}; binsize=0) where T<:Real
+"""
+    binning_error(X[; binsize=0; warnings=true])
+
+Calculates statistical error (eff. standard deviation) for correlated data.
+How: Binning of data and assuming statistical independence of bins
+(i.e. R plateau has been reached). (Eq. 3.18 basically)
+
+The default `binsize=0` indicates automatic binning.
+"""
+function binning_error(X::AbstractVector{T}; binsize=0; warnings=true) where T<:Real
 
     if binsize == 0
         binsize = 2^Int(floor(0.5 * log2(length(X))))
@@ -38,6 +43,13 @@ Ideally, this plot shows a plateau. (Fig. 3.3)
 Returns bss and R from R_function(X).
 """
 function plot_binning_R(X::Vector{T}; min_nbins=500, figsize=(6,4)) where T<:Real
+
+    try PyPlot
+    catch
+        warn("PyPlot not loaded. Loading it now...")
+        eval(Expr(:toplevel, Expr(:using, Symbol("PyPlot"))))
+    end
+
     bss, R = R_function(X, min_nbins=min_nbins)
     figure(figsize=figsize)
     plot(bss, R, "m.-")
@@ -55,6 +67,13 @@ Optional keyword `error` can be "tau_binning", "tau_integrated", or "tau_fitting
 and sets method for error estimation.
 """
 function plot_error(X::Vector{T}; binsize=0, histbins=50, error="binning", figsize=(10,4), digits=3) where T<:Real
+
+    try PyPlot
+    catch
+        warn("PyPlot not loaded. Loading it now...")
+        eval(Expr(:toplevel, Expr(:using, Symbol("PyPlot"))))
+    end
+
     fig, ax = subplots(1, 2, figsize=figsize)
 
     Xmean = mean(X)
