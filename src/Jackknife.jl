@@ -1,6 +1,6 @@
 """
     jackknife_binning(g::Function, x; [binsize=10])
-Compute the bias-corrected jackknife estimate and jackknife variance of `g(<x>)` by binning
+Compute the bias-corrected jackknife estimate and jackknife standard deviation of `g(<x>)` by binning
 x and performing leave-one-out analysis.
 """
 function jackknife_error(g::Function, x::AbstractVector{T}; binsize::Int=10) where T<:Real
@@ -8,7 +8,7 @@ function jackknife_error(g::Function, x::AbstractVector{T}; binsize::Int=10) whe
 
     xblock = map(mean, Base.Iterators.partition(x, binsize))
     gis = Jackknife.leaveoneout(g, xblock)
-    return Jackknife.var(g, xblock; gis=gis)
+    return sqrt(Jackknife.var(g, xblock; gis=gis))
 end
 
 function jackknife_error(g::Function, x::AbstractVector{T}; binsize::Int=10) where T<:Complex

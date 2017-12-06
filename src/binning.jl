@@ -3,7 +3,7 @@
 #####
 
 ```
-Calculates statistical error (eff. standard deviation) through binning of the data
+Calculates statistical error (eff. standard deviation, i.e. sqrt of varicance) through binning of the data
 and assuming statistical independence of bins (i.e. R plateau has been reached). (Eq. 3.18 basically)
 ```
 function binning_error(X::AbstractVector{T}; binsize=0) where T<:Real
@@ -16,7 +16,8 @@ function binning_error(X::AbstractVector{T}; binsize=0) where T<:Real
                                             "Last bin will be smaller than all others.")
     
     bin_means = map(mean, Iterators.partition(X, binsize))
-    return 1/length(bin_means) * var(bin_means)
+    return sqrt(1/length(bin_means) * var(bin_means))
+    # return var(bin_means) * binsize^2 # WHY DOES THAT FIT TO YONI????
 end
 function binning_error(X::AbstractVector{T}; binsize=0) where T<:Complex
     sqrt(binning_error(real(X), binsize=binsize)^2 + binning_error(imag(X), binsize=binsize)^2)
