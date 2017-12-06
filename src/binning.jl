@@ -3,7 +3,7 @@
 #####
 
 """
-    binning_error(X[; binsize=0; warnings=true])
+    binning_error(X[; binsize=0, warnings=true])
 
 Calculates statistical error (eff. standard deviation) for correlated data.
 How: Binning of data and assuming statistical independence of bins
@@ -11,25 +11,32 @@ How: Binning of data and assuming statistical independence of bins
 
 The default `binsize=0` indicates automatic binning.
 """
-function binning_error(X::AbstractVector{T}; binsize=0; warnings=true) where T<:Real
-
+function binning_error(X::AbstractVector{T}; binsize=0, warnings=true) where T<:Real
+    # Data: real numbers
     if binsize == 0
         binsize = 2^Int(floor(0.5 * log2(length(X))))
     end
 
-    isinteger(length(X) / binsize) || warn("Non-integer number of bins $(length(X) / binsize). " *
-                                            "Last bin will be smaller than all others.")
+    isinteger(length(X) / binsize) || !warnings ||
+        warn("Non-integer number of bins $(length(X) / binsize). " *
+             "Last bin will be smaller than all others.")
     
     bin_means = map(mean, Iterators.partition(X, binsize))
     return sqrt(1/length(bin_means) * var(bin_means))
-    # return var(bin_means) * binsize^2 # WHY DOES THAT FIT TO YONI????
 end
-function binning_error(X::AbstractVector{T}; binsize=0) where T<:Complex
-    sqrt(binning_error(real(X), binsize=binsize)^2 + binning_error(imag(X), binsize=binsize)^2)
+function binning_error(X::AbstractVector{T}; binsize=0, warnings=true) where T<:Complex
+    # Data: complex numbers
+    sqrt(binning_error(real(X), binsize=binsize, warnings=warnings)^2 +
+        binning_error(imag(X), binsize=binsize, warnings=warnings)^2)
 end
-function binning_error(X::AbstractArray{T}; binsize=0) where T<:Number
+
+# Data: arrays
+function binning_error(X::AbstractArray{T}; binsize=0, warnings=true) where T<:Number
     ndimsX = ndims(X)
-    mapslices(y->binning_error(y; binsize=binsize), X, ndimsX)[(Colon() for _ in 1:ndimsX-1)...,1]
+    mapslices(y->binning_error(y; binsize=binsize, warnings=warnings), X, ndimsX)[(Colon() for _ in 1:ndimsX-1)...,1]
+end
+function binning_error(X::AbstractVector{T}; binsize=0, warnings=true) where T<:(AbstractArray{S} where S)
+    binning_error(cat(3, X...); binsize=binsize, warnings=warnings)
 end
 
 
@@ -42,7 +49,7 @@ Ideally, this plot shows a plateau. (Fig. 3.3)
 
 Returns bss and R from R_function(X).
 """
-function plot_binning_R(X::Vector{T}; min_nbins=500, figsize=(6,4)) where T<:Real
+function plot_binning_R(X::Vector{T}; min_nbins=500, figsize=(4,3)) where T<:Real
 
     try PyPlot
     catch
@@ -80,7 +87,7 @@ function plot_error(X::Vector{T}; binsize=0, histbins=50, error="binning", figsi
     Xstd = std(X)
 
     if error == "binning"
-        err = binning_error(X, binsize=binsize)
+        err = binning_error(X, binsize=binsize, warnings=false)
     elseif error == "tau_binning"
         err = tau_binning_error(X, binsize=binsize)
     elseif error == "tau_integrated"
@@ -95,8 +102,11 @@ function plot_error(X::Vector{T}; binsize=0, histbins=50, error="binning", figsi
     ax[1][:set_yticks]([])
     ax[1][:axvline](Xmean, color="black", label="\$ $(round.(Xmean, digits)) \$", linewidth=2.0)
     
-    ax[1][:axvline](Xmean+err, color="r", label="\$ \\pm $(round.(err, digits)) \$", linewidth=2.0)
+    ax[1][:axvline](Xmean+err, color="r", label="\$ \\pm $(round.(err, digits)) \$ (binning σ)", linewidth=2.0)
     ax[1][:axvline](Xmean-err, color="r", linewidth=2.0)
+
+    ax[1][:axvline](Xmean+2*err, color="r", alpha=.3, label="\$ \\pm $(round.(2*err, digits)) \$ (binning 2σ)", linewidth=2.0)
+    ax[1][:axvline](Xmean-2*err, color="r", alpha=.3, linewidth=2.0)
 
     ax[1][:axvline](Xmean+Xstd, color="g", label="\$ \\pm $(round.(Xstd, digits)) \$ (std)", linewidth=2.0)
     ax[1][:axvline](Xmean-Xstd, color="g", linewidth=2.0)

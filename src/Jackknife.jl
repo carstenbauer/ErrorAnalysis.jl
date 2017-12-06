@@ -21,6 +21,10 @@ function jackknife_error(g::Function, x::AbstractArray{T}; binsize::Int=10) wher
     mapslices(y->binning_error(y; binsize=binsize), x, ndimsx)[(Colon() for _ in 1:ndimsx-1)...,1]
 end
 
+# Data: arrays
+function jackknife_error(g::Function, x::Union{AbstractArray{<:Number},AbstractVector{T} where T<:AbstractArray{<:Number}}; binsize::Int=10)
+    error("Jackknife error calculation for array like data not yet supported.")
+end
 
 
 """

@@ -30,14 +30,15 @@ end
 Elementwise check whether `A` and `B` are equal up to given real error matrix `Δ`.
 Will print `A ≈ B + K.*Δ` for `print=true`.
 """
-function iswithinerrorbars(A::AbstractArray{T}, B::AbstractArray{S}, Δ::AbstractArray{<:Real}, print::Bool=false) where T<:Number where S<:Number
+function iswithinerrorbars(A::AbstractArray{T}, B::AbstractArray{S},
+                           Δ::AbstractArray{<:Real}, print::Bool=false) where T<:Number where S<:Number
   size(A) == size(B) == size(Δ) || error("A, B and Δ must have same size.")
 
   R = iswithinerrorbars.(A,B,Δ,false)
   allequal = all(R)
 
-  if print && !all(R)
-    O = similar(A)
+  if print && !all(R) && T<:Real && S<:Real
+    O = similar(A, promote_type(T,S))
     for i in eachindex(O)
       a = A[i]; b = B[i]; δ = Δ[i]
       O[i] = R[i] ? 0.0 : round(a>b ? abs(a-(b+δ))/δ : -abs(a-(b-δ))/δ,4)
