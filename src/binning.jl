@@ -49,7 +49,7 @@ Ideally, this plot shows a plateau. (Fig. 3.3)
 
 Returns bss and R from R_function(X).
 """
-function plot_binning_R(X::Vector{T}; min_nbins=500, figsize=(4,3)) where T<:Real
+function plot_binning_R(X::Vector{T}; min_nbins=32, figsize=(4,3)) where T<:Real
 
     try PyPlot
     catch
