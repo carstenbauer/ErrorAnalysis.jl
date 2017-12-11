@@ -45,9 +45,11 @@ end
 #####
 """
 Plots the binning error coefficient function `R(binsize)` for multiple bin sizes.
-Ideally, this plot shows a plateau. (Fig. 3.3)
+Ideally, this plot shows a plateau (Fig. 3.3), indicating that the bin averages have become independent.
+For correlated data `R>≈1` and `sqrt(R)` quantifies how much one would have underestimated
+the one-sigma errorbar.
 
-Returns bss and R from R_function(X).
+Returns bss and R from `R_function(X)`.
 """
 function plot_binning_R(X::Vector{T}; min_nbins=32, figsize=(4,3)) where T<:Real
 
