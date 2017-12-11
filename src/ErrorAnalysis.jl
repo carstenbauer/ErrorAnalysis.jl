@@ -16,7 +16,7 @@ Will print `x ≈ y + k·δ` for `print=true`.
 Is equivalent to `isapprox(a,b,atol=δ,rtol=zero(b))`.
 """
 function iswithinerrorbars(a::T, b::S, δ::Real, print::Bool=false) where T<:Number where S<:Number
-  equal = isapprox(a,b,atol=δ,rtol=zero(T))
+  equal = isapprox(a,b,atol=δ,rtol=zero(δ))
   if print && !equal
     out = a>b ? abs(a-(b+δ))/δ : -abs(a-(b-δ))/δ
     println("x ≈ y + ",round(out,4),"·δ")
@@ -37,14 +37,18 @@ function iswithinerrorbars(A::AbstractArray{T}, B::AbstractArray{S},
   R = iswithinerrorbars.(A,B,Δ,false)
   allequal = all(R)
 
-  if print && !all(R) && T<:Real && S<:Real
-    O = similar(A, promote_type(T,S))
-    for i in eachindex(O)
-      a = A[i]; b = B[i]; δ = Δ[i]
-      O[i] = R[i] ? 0.0 : round(a>b ? abs(a-(b+δ))/δ : -abs(a-(b-δ))/δ,4)
+  if print && !all(R)
+    if T<:Real && S<:Real
+      O = similar(A, promote_type(T,S))
+      for i in eachindex(O)
+        a = A[i]; b = B[i]; δ = Δ[i]
+        O[i] = R[i] ? 0.0 : round(a>b ? abs(a-(b+δ))/δ : -abs(a-(b-δ))/δ,4)
+      end
+      println("A ≈ B + K.*Δ, where K is:")
+      display(O)
+    else
+      warn("Unfortunately print=true is only supported for real input.")
     end
-    println("A ≈ B + K.*Δ, where K is:")
-    display(O)
   end
 
   return allequal
