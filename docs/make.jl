@@ -1,4 +1,4 @@
-using Documenter, Helpers
+using Documenter, ErrorAnalysis
 
 makedocs(
     # options
@@ -6,7 +6,7 @@ makedocs(
 )
 
 makedocs(
-    modules = [Helpers],
+    modules = [ErrorAnalysis],
     format = :html,
     sitename = "ErrorAnalysis.jl",
     pages = [
