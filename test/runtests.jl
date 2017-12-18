@@ -3,7 +3,6 @@ using Base.Test
 
 # write your own tests here
 @testset "Generic" begin
-
     x = 3.1234;
     y = 3.021;
     A = [0.531844 0.717453; 0.552965 0.421109];
