@@ -11,7 +11,7 @@ How: Binning of data and assuming statistical independence of bins
 
 The default `binsize=0` indicates automatic binning.
 """
-function binning_error(X::AbstractVector{T}; binsize=0, warnings=true) where T<:Real
+function binning_error(X::AbstractVector{T}; binsize=0, warnings=false) where T<:Real
     # Data: real numbers
     if binsize == 0
         binsize = 2^Int(floor(0.5 * log2(length(X))))
@@ -24,18 +24,18 @@ function binning_error(X::AbstractVector{T}; binsize=0, warnings=true) where T<:
     bin_means = map(mean, Iterators.partition(X, binsize))
     return sqrt(1/length(bin_means) * var(bin_means))
 end
-function binning_error(X::AbstractVector{T}; binsize=0, warnings=true) where T<:Complex
+function binning_error(X::AbstractVector{T}; binsize=0, warnings=false) where T<:Complex
     # Data: complex numbers
     sqrt(binning_error(real(X), binsize=binsize, warnings=warnings)^2 +
         binning_error(imag(X), binsize=binsize, warnings=warnings)^2)
 end
 
 # Data: arrays
-function binning_error(X::AbstractArray{T}; binsize=0, warnings=true) where T<:Number
+function binning_error(X::AbstractArray{T}; binsize=0, warnings=false) where T<:Number
     ndimsX = ndims(X)
     mapslices(y->binning_error(y; binsize=binsize, warnings=warnings), X, ndimsX)[(Colon() for _ in 1:ndimsX-1)...,1]
 end
-function binning_error(X::AbstractVector{T}; binsize=0, warnings=true) where T<:(AbstractArray{S} where S)
+function binning_error(X::AbstractVector{T}; binsize=0, warnings=false) where T<:(AbstractArray{S} where S)
     binning_error(cat(3, X...); binsize=binsize, warnings=warnings)
 end
 
