@@ -3,7 +3,7 @@
 #####
 
 """
-    binning_error(X[; binsize=0, warnings=true])
+    binning_error(X[; binsize=0, warnings=false])
 
 Calculates statistical error (eff. standard deviation) for correlated data.
 How: Binning of data and assuming statistical independence of bins
@@ -14,7 +14,7 @@ The default `binsize=0` indicates automatic binning.
 function binning_error(X::AbstractVector{T}; binsize=0, warnings=false) where T<:Real
     # Data: real numbers
     if binsize == 0
-        binsize = 2^Int(floor(0.5 * log2(length(X))))
+        binsize = floor(Int, length(obs)/32)
     end
 
     isinteger(length(X) / binsize) || !warnings ||
