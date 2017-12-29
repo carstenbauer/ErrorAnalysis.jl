@@ -14,7 +14,7 @@ The default `binsize=0` indicates automatic binning.
 function binning_error(X::AbstractVector{T}; binsize=0, warnings=false) where T<:Real
     # Data: real numbers
     if binsize == 0
-        binsize = floor(Int, length(obs)/32)
+        binsize = floor(Int, length(X)/32)
     end
 
     isinteger(length(X) / binsize) || !warnings ||
