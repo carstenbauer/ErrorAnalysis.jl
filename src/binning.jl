@@ -15,6 +15,7 @@ function binning_error(X::AbstractVector{T}; binsize=0, warnings=false) where T<
     # Data: real numbers
     if binsize == 0
         binsize = floor(Int, length(X)/32)
+        binsize = binsize==0?1:binsize
     end
 
     isinteger(length(X) / binsize) || !warnings ||
