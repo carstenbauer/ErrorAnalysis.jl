@@ -37,7 +37,7 @@ function binning_error(X::AbstractArray{T}; binsize=0, warnings=false) where T<:
     mapslices(y->binning_error(y; binsize=binsize, warnings=warnings), X, ndimsX)[(Colon() for _ in 1:ndimsX-1)...,1]
 end
 function binning_error(X::AbstractVector{T}; binsize=0, warnings=false) where T<:(AbstractArray{S} where S)
-    binning_error(cat(3, X...); binsize=binsize, warnings=warnings)
+    binning_error(cat(ndims(X[1])+1, X...); binsize=binsize, warnings=warnings)
 end
 
 
